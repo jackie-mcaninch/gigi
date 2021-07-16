@@ -9,12 +9,13 @@ print("wallet address is:", wa)
 print("mac address is:", ma)
 print("process id is:", pid)
 print("vault id is:", vid)
+print("\n")
 
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
 for i in range(16):
+    hash = input.read(32).hex()
     n = int.from_bytes(input.read(4), "big")
     ts = int.from_bytes(input.read(4), "big")
-    hash = input.read(32).hex()
     print(f"{n:2d}  {ts:d}  {hash:s}")
 
 input.close()
