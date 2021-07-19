@@ -12,10 +12,15 @@ print("vault id is:", vid)
 print("\n")
 
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
-for i in range(16):
-    hash = input.read(32).hex()
+vals = [None]*10
+#out = open("records.txt","w")
+for i in range(len(vals)):
+    in_bytes = input.read(32)
+    hash = in_bytes.hex()
     n = int.from_bytes(input.read(4), "big")
     ts = int.from_bytes(input.read(4), "big")
-    print(f"{n:2d}  {ts:d}  {hash:s}")
+    #out.write
+    print(f"{n:10d}  {ts:10d}  {hash:70s}")
+    vals[i] = int.from_bytes(in_bytes[:8], "big")
 
 input.close()
