@@ -15,8 +15,8 @@ def retrieve(bit_string, diff):
     challenge = bitarray(bit_string)
     key = challenge[:diff]
     #print(key.tolist())
-    int_rep = bitarray_to_int(challenge)
-    maximum = 2**256
+    int_rep = bitarray_to_int(key)
+    maximum = (2**diff)
     loc_index = int_rep/maximum
     file_size = os.stat("vaults/testing.bin").st_size
     start_pt = int(loc_index*(file_size - 270))                 #find statistically probable location of record
