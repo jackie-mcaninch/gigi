@@ -1,3 +1,4 @@
+from bitarray import bitarray
 input = open("vaults/testing.bin", "rb")
 
 #PRINT HEADER INFORMATION
@@ -12,15 +13,16 @@ print("vault id is:", vid)
 print("\n")
 
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
-vals = [None]*10
+bits = bitarray(endian='big')
 #out = open("records.txt","w")
-for i in range(len(vals)):
+for i in range(20):
     in_bytes = input.read(32)
-    hash = in_bytes.hex()
+    bits.frombytes(in_bytes)
+    hex_hash = in_bytes.hex()
     n = int.from_bytes(input.read(4), "big")
     ts = int.from_bytes(input.read(4), "big")
     #out.write
-    print(f"{n:10d}  {ts:10d}  {hash:70s}")
-    vals[i] = int.from_bytes(in_bytes[:8], "big")
-
+    print(f"{n:10d}  {ts:10d}  {repr(bits[:28]):35s} {hex_hash:70s}")
+    bits.clear()
+    
 input.close()
