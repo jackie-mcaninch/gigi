@@ -2,7 +2,7 @@ from bitarray import bitarray
 input = open("vaults/testing.bin", "rb")
 
 #PRINT HEADER INFORMATION
-wa = str(input.read(256).decode("utf8"))
+wa = str(input.read(32).decode("utf8"))
 ma = int.from_bytes(input.read(6), "big")
 pid = int.from_bytes(input.read(4), "big")
 vid = int.from_bytes(input.read(4), "big")

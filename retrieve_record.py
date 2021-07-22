@@ -11,27 +11,34 @@ def bitarray_to_int(arr):
         total += (arr[-i])*(2**(i-1))
     return total
 
-def retrieve(bit_string, diff):
+def calc_expected_loc(val, f_size):
+    loc_index = (val)/(2**256)
+    s = int(loc_index*(f_size - 46))
+    s -= s % 40
+    s += 46
+    return s
+
+def retrieve(vault_name, bit_string, diff):
+    #init challenge specific variables
     challenge = bitarray(bit_string)
     key = challenge[:diff]
-    #print(key.tolist())
-    int_rep = bitarray_to_int(key)
-    maximum = (2**diff)
-    loc_index = int_rep/maximum
-    file_size = os.stat("vaults/testing.bin").st_size
-    start_pt = int(loc_index*(file_size - 270))                 #find statistically probable location of record
-    start_pt -= (start_pt % 40)                                 #round to nearest record start
-    start_pt += 270                                             #skip file header
+    int_rep = bitarray_to_int(challenge)
+    file_name = "vaults/"+vault_name
+    file_size = os.stat(file_name).st_size
+    start_pt = calc_expected_loc(int_rep, file_size)
     #print("starting point is",start_pt)
-    file_name = "vaults/testing.bin"
+
+    #init searching tools
     seeker = open(file_name, "rb")
     seeker.seek(start_pt)
     record = bitarray(endian="big")
     is_right = False
     is_left = False
-    for i in range(1000000): #simply to time out, adjust later
-        #print(seeker.tell())
+
+    #begin search
+    while True:
         record.clear()
+        #seeker.read(4000)
         record.frombytes(seeker.read(32))
         n = int.from_bytes(seeker.read(4), "big")
         ts = int.from_bytes(seeker.read(4), "big")
@@ -52,7 +59,6 @@ def retrieve(bit_string, diff):
                 continue
             print(i,"No")
             return False
-    print("loop timed out")
 
 
 
@@ -63,12 +69,13 @@ from bitarray import bitarray
 
 
 
-#reader = open("sample_challenge.txt","r")
+
 writer = open("random_challenge.txt","w")
 for i in range(256):
     writer.write(str(random.randint(0,1)))
 writer.close()
 reader = open("random_challenge.txt","r")
+#reader = open("sample_challenge.txt","r")
 challenge_message = str(reader.read(256))
-retrieve(challenge_message, int(sys.argv[1]))
+retrieve("testing.bin", challenge_message, int(sys.argv[1]))
 reader.close()
