@@ -6,7 +6,7 @@ def get_existing_vaults():
     except:
         os.mkdir("vaults")
         os.chdir("vaults")
-    for root, dirs, files in os.walk(os.getcwd()):
+    for _, _, files in os.walk(os.getcwd()):
         for file in files:
             if file[-4:]==".bin" and file!="filters.bin":
                 num_existing_vaults += 1
@@ -48,8 +48,7 @@ timestamp = None
 num_records = int(sys.argv[1])
 hash_vals = numpy.empty(num_records, dtype=numpy.dtype('V32'))
 print("Number of records:", num_records)
-timestamps = {}
-nonces = {}
+other_info = {}
 
 #start timer (testing only)
 s = time.time()
@@ -69,8 +68,8 @@ while nonce<len(hash_vals)-1:
     h2 = h.copy()
     h2.update(record_bytes)
     hash_vals[nonce] = h2.digest()
-    nonces[bytes(hash_vals[nonce])] = nonce 
-    timestamps[bytes(hash_vals[nonce])] = timestamp
+    other_info[bytes(hash_vals[nonce])] = (nonce, timestamp)
+
 #stop timer (testing only)
 e = time.time()
 print(f"TOTAL TIME FOR GENERATION: {e-s:.4f} seconds")
@@ -99,32 +98,42 @@ s = time.time()
 #total mem: 256 + 6 + 4 + 4 = 270 bytes
 os.chdir("vaults")
 file_name = "testing.bin"#str(vault_id)+".bin"
-writer = open(file_name, "wb")
+buf_size = io.DEFAULT_BUFFER_SIZE
+writer = open(file_name, "wb", -1)#, buf_size)
 #print(io.DEFAULT_BUFFER_SIZE)
-writer.write(wallet_addr)#int.from_bytes(wallet_addr, "big").to_bytes(32, "big"))
+writer.write(wallet_addr)
 writer.write(mac_addr)
 writer.write(process_id)
 writer.write(vault_id)
+writer.flush()
 
 #write all records
 #total mem: 32 + 4 + 4 = 40 bytes per record
-#index = 0
-#while index < len(hash_vals):
-#    line = bytearray(100000*40)
-#    line_idx = 0
-#    for val in hash_vals[index:min(len(hash_vals)-1, index+100000)]:
-#        line[line_idx:line_idx+32] = bytes(val)
-#        line_idx += 32
-#        line[line_idx:line_idx+4] = nonces[bytes(val)].to_bytes(4, "big")
-#        line_idx += 4
-#        line[line_idx:line_idx+4] = timestamps[bytes(val)].to_bytes(4, "big")
-#        line_idx +=4
-#        #line += bytes(val) + nonces[bytes(val)].to_bytes(4, "big") + timestamps[bytes(val)].to_bytes(4, "big")
-#    writer.write(bytes(line))
-#    index += 100000
-for val in hash_vals:
-    line = bytes(val) + nonces[bytes(val)].to_bytes(4, "big") + timestamps[bytes(val)].to_bytes(4, "big")
-    writer.write(line)
+index = 0
+while index < len(hash_vals):
+    line = bytearray(100000*40)
+    line_idx = 0
+    for val in hash_vals[index:min(len(hash_vals)-1, index+100000)]:
+        line[line_idx:line_idx+32] = bytes(val)
+        line_idx += 32
+        line[line_idx:line_idx+4] = other_info[bytes(val)][0].to_bytes(4, "big")
+        line_idx += 4
+        line[line_idx:line_idx+4] = other_info[bytes(val)][1].to_bytes(4, "big")
+        line_idx +=4
+    writer.write(bytes(line))
+    writer.flush()
+    index += 100000
+
+#counter = 0
+#recs_in_buf = buf_size//40
+#for val in hash_vals:
+#    if counter % recs_in_buf == 0:
+#        pass#writer.flush()
+    #    if counter % 1000000 == 0:
+    #        print("flushed 5000 times!")
+#    line = bytes(val) + other_info[bytes(val)][0].to_bytes(4, "big") + other_info[bytes(val)][1].to_bytes(4, "big")
+#    writer.write(line)
+#    counter += 1
 writer.close()
 
 #end timer (testing only)

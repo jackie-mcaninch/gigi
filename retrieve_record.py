@@ -22,6 +22,7 @@ def retrieve(vault_name, bit_string, diff):
     #init challenge specific variables
     challenge = bitarray(bit_string)
     key = challenge[:diff]
+    print("key is",key)
     int_rep = bitarray_to_int(challenge)
     file_name = "vaults/"+vault_name
     file_size = os.stat(file_name).st_size
@@ -35,8 +36,10 @@ def retrieve(vault_name, bit_string, diff):
     is_right = False
     is_left = False
 
+    i=0
     #begin search
     while True:
+        i+=1
         record.clear()
         #seeker.read(4000)
         record.frombytes(seeker.read(32))
@@ -44,8 +47,8 @@ def retrieve(vault_name, bit_string, diff):
         ts = int.from_bytes(seeker.read(4), "big")
         #success case
         if record[:diff]==key:
-            print(i,"Yes")
-            #print(f"{n:10d}  {ts:10d}  {repr(record[:diff]):300s}")
+            #print(i,"Yes")
+            print(f"success! found after {i:4d} iterations {n:10d}  {ts:10d}  {repr(record[:diff]):300s}")
             return True
         #keep searching case
         else:
