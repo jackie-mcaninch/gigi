@@ -19,15 +19,14 @@ vid = int.from_bytes(input.read(4), "big")
 
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
 bits = bitarray(endian='big')
-#out = open("records.txt","w")
-for i in range(20):
+out = open("records.txt","w")
+for i in range(5):
     in_bytes = input.read(32)
     bits.frombytes(in_bytes)
     hex_hash = in_bytes.hex()
     n = int.from_bytes(input.read(4), "big")
     ts = int.from_bytes(input.read(4), "big")
-    #out.write
-    print(f"{n:10d}  {ts:10d}  {repr(bits[:28]):35s} {hex_hash:70s}")
+    out.write(f"{n:10d}  {ts:10d}  {repr(bits):35s} {hex_hash:70s}\n")
     bits.clear()
     
 input.close()

@@ -70,6 +70,7 @@ while nonce<len(hash_vals)-1:
     hash_vals[nonce] = h2.digest()
     other_info[bytes(hash_vals[nonce])] = (nonce, timestamp)
 
+
 #stop timer (testing only)
 e = time.time()
 print(f"TOTAL TIME FOR GENERATION: {e-s:.4f} seconds")
@@ -95,7 +96,7 @@ print(f"TOTAL TIME FOR SORTING: {e-s:.4f} seconds")
 s = time.time()
 
 #write file header
-#total mem: 256 + 6 + 4 + 4 = 270 bytes
+#total mem: 32 + 6 + 4 + 4 = 46 bytes
 os.chdir("vaults")
 file_name = "testing.bin"#str(vault_id)+".bin"
 buf_size = io.DEFAULT_BUFFER_SIZE
@@ -109,34 +110,28 @@ writer.flush()
 
 #write all records
 #total mem: 32 + 4 + 4 = 40 bytes per record
-index = 0
-while index < len(hash_vals):
-    line = bytearray(100000*40)
-    line_idx = 0
-    for val in hash_vals[index:min(len(hash_vals)-1, index+100000)]:
-        line[line_idx:line_idx+32] = bytes(val)
-        line_idx += 32
-        line[line_idx:line_idx+4] = other_info[bytes(val)][0].to_bytes(4, "big")
-        line_idx += 4
-        line[line_idx:line_idx+4] = other_info[bytes(val)][1].to_bytes(4, "big")
-        line_idx +=4
-    writer.write(bytes(line))
-    writer.flush()
-    index += 100000
+# index = 0
+# while index < len(hash_vals):
+#     line = bytearray(100000*40)
+#     line_idx = 0
+#     for val in hash_vals[index:min(len(hash_vals)-1, index+100000)]:
+#         line[line_idx:line_idx+32] = bytes(val)
+#         line_idx += 32
+#         line[line_idx:line_idx+4] = other_info[bytes(val)][0].to_bytes(4, "big")
+#         line_idx += 4
+#         line[line_idx:line_idx+4] = other_info[bytes(val)][1].to_bytes(4, "big")
+#         line_idx +=4
+#     writer.write(bytes(line))
+#     writer.flush()
+#     index += 100000
 
-#counter = 0
-#recs_in_buf = buf_size//40
-#for val in hash_vals:
-#    if counter % recs_in_buf == 0:
-#        pass#writer.flush()
-    #    if counter % 1000000 == 0:
-    #        print("flushed 5000 times!")
-#    line = bytes(val) + other_info[bytes(val)][0].to_bytes(4, "big") + other_info[bytes(val)][1].to_bytes(4, "big")
-#    writer.write(line)
-#    counter += 1
+for val in hash_vals:
+   line = bytes(val) + other_info[bytes(val)][0].to_bytes(4, "big") + other_info[bytes(val)][1].to_bytes(4, "big")
+   writer.write(line)
 writer.close()
 
 #end timer (testing only)
 e = time.time()
 print(f"TOTAL TIME FOR WRITING: {e-s:.4f} seconds")
 
+# PROBLEM: FILLS IN RECORDS OF ZEROS AT THE END
