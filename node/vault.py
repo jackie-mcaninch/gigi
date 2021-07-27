@@ -88,6 +88,11 @@ class Vault:
         return False
 
     def create_message(self, vault_name, rec, n, ts):
+        reader = open(vault_name, "rb")
+        head = reader.read(46)
+        tail = bytes(n+ts+rec)
+        full_msg = head+tail
+        print(full_msg)
         #create JSON message to give to Kafka
         pass
 

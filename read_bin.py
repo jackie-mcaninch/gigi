@@ -20,7 +20,7 @@ vid = int.from_bytes(input.read(4), "big")
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
 bits = bitarray(endian='big')
 out = open("records.txt","w")
-for i in range(5):
+for i in range(33):
     in_bytes = input.read(32)
     bits.frombytes(in_bytes)
     hex_hash = in_bytes.hex()

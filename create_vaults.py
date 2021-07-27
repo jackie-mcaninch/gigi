@@ -8,7 +8,7 @@ def get_existing_vaults():
         os.chdir("vaults")
     for _, _, files in os.walk(os.getcwd()):
         for file in files:
-            if file[-4:]==".bin" and file!="filters.bin":
+            if file[-4:]==".bin":
                 num_existing_vaults += 1
     os.chdir("../")
     return num_existing_vaults
@@ -98,7 +98,7 @@ s = time.time()
 #write file header
 #total mem: 32 + 6 + 4 + 4 = 46 bytes
 os.chdir("vaults")
-file_name = "testing.bin"#str(vault_id)+".bin"
+file_name = "foo.bin"#str(vault_id)+".bin"
 buf_size = io.DEFAULT_BUFFER_SIZE
 writer = open(file_name, "wb", -1)#, buf_size)
 #print(io.DEFAULT_BUFFER_SIZE)
