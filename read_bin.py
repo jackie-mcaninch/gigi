@@ -1,8 +1,8 @@
 from bitarray import bitarray
 import os
 
-input = open("vaults/testing.bin", "rb")
-file_size = os.stat("vaults/testing.bin").st_size
+input = open("vaults/test.bin", "rb")
+file_size = os.stat("vaults/test.bin").st_size
 num_records = (file_size - 46)//40
 print("TOTAL RECORDS IN FILE:",num_records)
 
@@ -20,13 +20,14 @@ vid = int.from_bytes(input.read(4), "big")
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
 bits = bitarray(endian='big')
 out = open("records.txt","w")
-for i in range(33):
+for i in range(500):
     in_bytes = input.read(32)
     bits.frombytes(in_bytes)
+    bitstring = bits.to01()
     hex_hash = in_bytes.hex()
     n = int.from_bytes(input.read(4), "big")
     ts = int.from_bytes(input.read(4), "big")
-    out.write(f"{n:10d}  {ts:10d}  {repr(bits):35s} {hex_hash:70s}\n")
+    out.write(f"{n:10d}  {ts:10d}  {bitstring:35s} {hex_hash:70s}\n")
     bits.clear()
     
 input.close()

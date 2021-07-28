@@ -24,6 +24,7 @@ import hashlib
 import uuid
 import numpy
 import io
+from filter import filter
 
 
 #UNIQUE ATTRIBUTES FOR HASHING
@@ -97,10 +98,9 @@ s = time.time()
 #write file header
 #total mem: 32 + 6 + 4 + 4 = 46 bytes
 os.chdir("vaults")
-file_name = "foo.bin"#str(vault_id)+".bin"
-buf_size = io.DEFAULT_BUFFER_SIZE
+file_name = "full_vault.bin"
+#buf_size = io.DEFAULT_BUFFER_SIZE
 writer = open(file_name, "wb", -1)#, buf_size)
-#print(io.DEFAULT_BUFFER_SIZE)
 writer.write(wallet_addr)
 writer.write(mac_addr)
 writer.write(process_id)
@@ -109,6 +109,8 @@ writer.flush()
 
 #write all records
 #total mem: 32 + 4 + 4 = 40 bytes per record
+
+# ***implement later: manipulate file buffering to optimize***
 # index = 0
 # while index < len(hash_vals):
 #     line = bytearray(100000*40)
@@ -132,3 +134,18 @@ writer.close()
 #end timer (testing only)
 e = time.time()
 print(f"TOTAL TIME FOR WRITING: {e-s:.4f} seconds")
+
+
+#BUILD FILTER
+
+#start timer (testing only)
+s = time.time()
+
+#add filter items
+f = filter()
+f.add_filter(file_name,25)
+f.clean_filters(25)
+
+#end timer (testing only)
+e = time.time()
+print(f"TOTAL TIME FOR BUILDING FILTER: {e-s:.4f} seconds")

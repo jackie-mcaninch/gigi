@@ -8,7 +8,7 @@ from kafka import KafkaProducer
 
 class Vault:
     def __init__(self):
-        #SYNTAX: python vault.py find <hash> <difficulty> <(optional) block_size>
+        #SYNTAX: python vault.py find <hash> <difficulty> <block_size (optional)>
         if len(sys.argv) > 2:
             if sys.argv[1] == "find":
                 #added block size parameter for benchmarking
@@ -16,7 +16,11 @@ class Vault:
                 if len(sys.argv)>4:
                     block_size = int(sys.argv[4])
                 print("Searching for hash of difficulty",sys.argv[3],"and block size",block_size)
-                self.retrieve("testing.bin",sys.argv[2], int(sys.argv[3]), block_size)
+                if self.check_filter(sys.argv[2], int(sys.argv[3])):
+                    print("filter says record exists")
+                else:
+                    print("filter says record does not exist")
+                self.retrieve("full_vault.bin",sys.argv[2], int(sys.argv[3]), block_size)
                 print("\n")
 
     # def does_hash_exist_on_disk(self, this_hash, difficulty):
@@ -27,6 +31,17 @@ class Vault:
         # else:
         #     print("False - " + str(this_hash) + " does NOT exist on disk with difficulty " + str(difficulty))
 
+    def check_filter(self, target_rec, diff):
+        target_rec = bitarray(target_rec)
+        fil = open("../vaults/current-filter-"+str(diff)+".bin", "rb")
+        filter = bitarray(endian="big")
+        filter.frombytes(fil.read(10485728))
+        digest1 = mmh3.hash(target_rec[:diff].tobytes(), 1) % len(filter)
+        digest2 = mmh3.hash(target_rec[:diff].tobytes(), 2) % len(filter)
+        if filter[digest1] == 1 and filter[digest2] == 1:
+            return True
+        return False
+    
     def bitarray_to_int(self, arr):
         total = 0
         for i in range(1,len(arr)+1):
@@ -49,26 +64,25 @@ class Vault:
         bit_string = bit_string.ljust(256, "0")
         challenge = bitarray(bit_string)
         key = challenge[:diff]
-        #print("key is",key)
         int_rep = self.bitarray_to_int(challenge)
         file_name = "../vaults/"+vault_name
         file_size = os.stat(file_name).st_size
-        start_pt = self.calc_expected_loc(int_rep, file_size)
-        #print("starting point is",start_pt)
+        start_pt = max(46, self.calc_expected_loc(int_rep, file_size)-(block_size//2))
+        print("start pt is",start_pt)
 
         #init searching tools
         seeker = open(file_name, "rb")
-        seeker.seek(start_pt-(block_size//2))
+        seeker.seek(start_pt)
         first_record = bitarray(endian="big")
         last_record = bitarray(endian="big")
 
         #locate correct block
         s1 = time.time()
         while True:
-            #print("file pos is", seeker.tell())
+            print("fp is",seeker.tell())
             first_record.clear()
             last_record.clear()
-            buf = bytes(seeker.read(min(block_size, file_size-seeker.tell()))) #try different amount of buffer size
+            buf = bytes(seeker.read(min(block_size, file_size-seeker.tell())))
             first_record.frombytes(buf[0:32])
             if first_record[:diff]>key:
                 if seeker.tell() <= block_size+46:
