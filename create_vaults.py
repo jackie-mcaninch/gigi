@@ -21,7 +21,6 @@ import sys
 import os
 import time
 import hashlib
-import bloom
 import uuid
 import numpy
 import io
@@ -83,7 +82,7 @@ print(f"TOTAL TIME FOR GENERATION: {e-s:.4f} seconds")
 s = time.time()
 
 #sort hash values
-hash_vals.sort(kind="mergesort")
+hash_vals.sort(kind="quicksort") #for future mods, maybe try tensorflow sort with parallelization
 
 #stop timer (testing only)
 e = time.time()
@@ -133,5 +132,3 @@ writer.close()
 #end timer (testing only)
 e = time.time()
 print(f"TOTAL TIME FOR WRITING: {e-s:.4f} seconds")
-
-# PROBLEM: FILLS IN RECORDS OF ZEROS AT THE END

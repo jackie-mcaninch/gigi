@@ -4,3 +4,4 @@
 *.pyc
 *.code-workspace
 test_filter.py
+gen_rand_chal.py
