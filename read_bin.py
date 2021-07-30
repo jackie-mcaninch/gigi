@@ -1,26 +1,32 @@
 from bitarray import bitarray
 import os
+import sys
 
-input = open("vaults/test.bin", "rb")
-file_size = os.stat("vaults/test.bin").st_size
+file_name = "vaults/full_vault.bin"
+input = open(file_name, "rb")
+out = open("records.txt","w")
+file_size = os.stat(file_name).st_size
 num_records = (file_size - 46)//40
-print("TOTAL RECORDS IN FILE:",num_records)
+out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n")
 
 #PRINT HEADER INFORMATION
 wa = str(input.read(32).decode("utf8"))
-ma = int.from_bytes(input.read(6), "big")
-pid = int.from_bytes(input.read(4), "big")
-vid = int.from_bytes(input.read(4), "big")
-#print("wallet address is:", wa)
-#print("mac address is:", ma)
-#print("process id is:", pid)
-#print("vault id is:", vid)
-#print("\n")
+ma = str(int.from_bytes(input.read(6), "big"))
+pid = str(int.from_bytes(input.read(4), "big"))
+vid = str(int.from_bytes(input.read(4), "big"))
+out.write(f"wallet address is: {wa}\n")
+out.write(f"mac address is: {ma}\n")
+out.write(f"process id is: {pid}\n")
+out.write(f"vault id is: {vid}\n")
+out.write("\n")
 
 #PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
+if len(sys.argv) > 1:
+    num_print = int(sys.argv[1])
+else:
+    num_print = 20
 bits = bitarray(endian='big')
-out = open("records.txt","w")
-for i in range(500):
+for i in range(num_print):
     in_bytes = input.read(32)
     bits.frombytes(in_bytes)
     bitstring = bits.to01()
@@ -31,3 +37,4 @@ for i in range(500):
     bits.clear()
     
 input.close()
+out.close()

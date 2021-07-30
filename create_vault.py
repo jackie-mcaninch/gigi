@@ -45,7 +45,10 @@ timestamp = None
 #GENERATION
 
 #init array of hashes and dictionaries
-num_records = int(sys.argv[1])
+if len(sys.argv) > 1:
+    num_records = int(sys.argv[1])
+else:
+    num_records = 26843544
 hash_vals = numpy.empty(num_records, dtype=numpy.dtype('V32'))
 print("Number of records:", num_records)
 other_info = {}
@@ -59,6 +62,7 @@ h = hashlib.sha256()
 h.update(header_bytes)
 
 #create records
+#parsl
 while nonce<len(hash_vals)-1:  
     #update nonce and timestamp
     nonce += 1
