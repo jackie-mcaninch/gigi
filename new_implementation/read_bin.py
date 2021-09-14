@@ -4,9 +4,9 @@ import sys
 
 file_name = "vault.bin"
 input = open(file_name, "rb")
-out = open("records1.txt","w")
+out = open("records.txt","w")
 file_size = os.stat(file_name).st_size
-num_records = (file_size)//32
+num_records = (file_size)//28
 out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n")
 
 #PRINT HEADER INFORMATION
@@ -27,7 +27,7 @@ else:
     num_print = 20
 bits = bitarray(endian='big')
 for i in range(num_print):
-    in_bytes = input.read(32)
+    in_bytes = input.read(28)
     bits.frombytes(in_bytes)
     bitstring = bits.to01()
     hex_hash = in_bytes.hex()
