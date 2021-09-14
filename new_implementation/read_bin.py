@@ -3,11 +3,8 @@ import os
 import sys
 
 file_name = "vault.bin"
-#file_name2 = "vault2.bin"
 input = open(file_name, "rb")
-#input2 = open(file_name2, "rb")
-out = open("records2.txt","w")
-#out2 = open("records2.txt","w")
+out = open("records1.txt","w")
 file_size = os.stat(file_name).st_size
 num_records = (file_size)//32
 out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n")
@@ -23,7 +20,7 @@ out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n")
 # out.write(f"vault id is: {vid}\n")
 # out.write("\n")
 
-#PRINT INDIVIDUAL RECORDS (SORTED BY HASH VALUE)
+#PRINT INDIVIDUAL RECORDS
 if len(sys.argv) > 1:
     num_print = int(sys.argv[1])
 else:
@@ -39,15 +36,6 @@ for i in range(num_print):
     out.write(f"{hex_hash:70s}\n")
     # out.write(f"{n:10d}  {ts:10d}  {bitstring:35s} {hex_hash:70s}\n")
     bits.clear()
-
-    # in_bytes = input2.read(32)
-    # bits.frombytes(in_bytes)
-    # bitstring = bits.to01()
-    # hex_hash = in_bytes.hex()
-    # out2.write(f"{hex_hash:70s}\n")
-    # bits.clear()
     
 input.close()
-#input2.close()
 out.close()
-#out2.close()
