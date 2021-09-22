@@ -1,14 +1,23 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <time.h>
 #include "sha224.h"
 using namespace std;
 
+const int RECS_PER_BLOCK = 32;
+
+struct record {
+    char hash[24];  //24-byte hash
+    int n;          //4-byte nonce
+    int ts;         //4-byte timestamp
+};
+
 void hex_to_bytes(const char* hex_string, char* out_byte_string, const char* hex_vals) {
     char curr_byte;
-    for (int i=0, j=0; i<56; i+=2, j++) {
-        curr_byte = hex_vals[hex_string[i]]*16+hex_vals[hex_string[i+1]];
+    for (int i=0, j=0; i<48; i+=2, j++) {
+        curr_byte = hex_vals[(int)hex_string[i]]*16+hex_vals[(int)hex_string[i+1]];
         out_byte_string[j] = curr_byte;
     }
 }
@@ -23,21 +32,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    //INIT VARIABLES
-    string const_info = "wallet_addr+mac_addr";
-    string temp_info;
-    string complete_string;
-    string hash;
-
-    int num_hashes= 4*32; //please use multiple of 32 for now
-    int nonce = 0;
-    int buf_counter;
-    
-    char hex_vals[256];
-    char buf[32*28];
-    
     //INIT CONSTANT HEX VALUE REPRESENTATION
-    for (int i=0; i<256; i++) {
+    char hex_vals[102];
+    for (int i=0; i<102; i++) {
         hex_vals[i] = 0;
     }
     hex_vals['0'] = 0;
@@ -56,20 +53,49 @@ int main(int argc, char *argv[]) {
     hex_vals['d'] = 13;
     hex_vals['e'] = 14;
     hex_vals['f'] = 15;
-    
+
+    //INIT VARIABLES
+    string const_info = "wallet_addr+mac_addr";
+    string temp_info;
+    string complete_string;
+    string hash;
+
+    int num_hashes= atoi(argv[1]); //please use multiple of 32 for now
+    int nonce = 0;
+    int timestamp = time(0);
+
+    record record_buf[RECS_PER_BLOCK*sizeof(record)];
+    record* curr_record = &record_buf[0];
+    int buf_counter;
+
+
     //GENERATE HASHES AND DUMP TO DISK
+    clock_t s = clock();
     while (nonce<num_hashes) {
-        buf_counter = nonce%32;
-        temp_info = to_string(time(0)) + to_string(nonce);
+        buf_counter = nonce%RECS_PER_BLOCK;
+        timestamp = time(0);
+        temp_info = to_string(timestamp) + to_string(nonce);
         complete_string = const_info + temp_info;
         hash = sha224(complete_string);
-        cout << "record : " << hash << "\n";
-        hex_to_bytes(hash.c_str(), &buf[buf_counter*28], hex_vals);
+        //cout << "record : " << hash << "\n";
+        //cout << "curr_record address: " << curr_record << "\n";
+        hex_to_bytes(hash.c_str(), &(curr_record->hash[0]), hex_vals);//&buf[buf_counter*24], hex_vals);
+        curr_record->n = nonce;
+        curr_record->ts = timestamp;
         nonce++;
-        if (buf_counter==31) {
-            file1.write(buf, 32*28);
+        if (buf_counter==RECS_PER_BLOCK-1) {
+            //NOTE: WRITES NONCE AND TIMESTAMP WITH LITTLE ENDIANNESS
+            file1.write((const char*)&record_buf, 32*sizeof(record));
+            //timestamp = time(0);
+            curr_record -= RECS_PER_BLOCK;
         }
+        curr_record++;
     }
+    file1.write((const char*)&record_buf, (buf_counter+1)*sizeof(record));  //flush remnants inside buffer
+    clock_t e = clock();
+
+    //FINISH
+    cout << "TIME FOR GENERATION AND DUMP: " <<  ((double)(e-s)/CLOCKS_PER_SEC) << "\n";
     file1.close();
     return 0;
 }
