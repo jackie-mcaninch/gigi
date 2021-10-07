@@ -6,7 +6,8 @@
 #include "sha224.h"
 using namespace std;
 
-const int RECS_PER_BLOCK = 32;
+const int RECS_PER_BLOCK = 32*1024;  //32 bytes per record
+const int HEADER_SIZE = 1024;
 
 struct record {
     char hash[24];  //24-byte hash
@@ -23,7 +24,7 @@ void hex_to_bytes(const char* hex_string, char* out_byte_string, const char* hex
 }
 
 int main(int argc, char *argv[]) {
-    //OPEN FILE FOR WRITING
+    // OPEN FILE FOR WRITING
     ofstream file1;
     file1.open("vault.bin", ios::out | ios::binary | ios::trunc);// | ios::app);
 
@@ -32,9 +33,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    //INIT CONSTANT HEX VALUE REPRESENTATION
-    char hex_vals[102];
-    for (int i=0; i<102; i++) {
+    // INIT CONSTANT HEX VALUE REPRESENTATION
+    char hex_vals[103];
+    for (int i=0; i<103; i++) {
         hex_vals[i] = 0;
     }
     hex_vals['0'] = 0;
@@ -54,22 +55,28 @@ int main(int argc, char *argv[]) {
     hex_vals['e'] = 14;
     hex_vals['f'] = 15;
 
-    //INIT VARIABLES
-    string const_info = "wallet_addr+mac_addr";
+    // INIT VARIABLES
+    char const_info[HEADER_SIZE] = "0123456789abcdef0123456789abcdef9cb6d08f6a02";
     string temp_info;
     string complete_string;
     string hash;
 
-    int num_hashes= atoi(argv[1]); //please use multiple of 32 for now
+    int num_hashes= atoi(argv[1]);
     int nonce = 0;
     int timestamp = time(0);
 
-    record record_buf[RECS_PER_BLOCK*sizeof(record)];
-    record* curr_record = &record_buf[0];
-    int buf_counter;
+    record* record_buf = (record*)malloc(RECS_PER_BLOCK*sizeof(record));
+    if (record_buf==NULL) {
+        cout << "Memory not allocated\n";
+        return(-1);
+    }
+    record* curr_record = record_buf;
+    int buf_counter = 0;
 
+    // PRINT HEADER TO FILE
+    file1.write(const_info, HEADER_SIZE);
 
-    //GENERATE HASHES AND DUMP TO DISK
+    // GENERATE HASHES AND DUMP TO DISK
     clock_t s = clock();
     while (nonce<num_hashes) {
         buf_counter = nonce%RECS_PER_BLOCK;
@@ -79,23 +86,27 @@ int main(int argc, char *argv[]) {
         hash = sha224(complete_string);
         //cout << "record : " << hash << "\n";
         //cout << "curr_record address: " << curr_record << "\n";
-        hex_to_bytes(hash.c_str(), &(curr_record->hash[0]), hex_vals);//&buf[buf_counter*24], hex_vals);
+        hex_to_bytes(hash.c_str(), &(curr_record->hash[0]), hex_vals);
         curr_record->n = nonce;
         curr_record->ts = timestamp;
         nonce++;
         if (buf_counter==RECS_PER_BLOCK-1) {
             //NOTE: WRITES NONCE AND TIMESTAMP WITH LITTLE ENDIANNESS
-            file1.write((const char*)&record_buf, 32*sizeof(record));
+            file1.write((const char*)record_buf, RECS_PER_BLOCK*sizeof(record));
             //timestamp = time(0);
             curr_record -= RECS_PER_BLOCK;
         }
         curr_record++;
     }
-    file1.write((const char*)&record_buf, (buf_counter+1)*sizeof(record));  //flush remnants inside buffer
+
+    // FLUSH REMNANTS INSIDE BUFFER
+    curr_record -= buf_counter+1;
+    file1.write((const char*)record_buf, (buf_counter+1)*sizeof(record));
     clock_t e = clock();
 
-    //FINISH
+    // FINISH
     cout << "TIME FOR GENERATION AND DUMP: " <<  ((double)(e-s)/CLOCKS_PER_SEC) << "\n";
     file1.close();
+    free(record_buf);
     return 0;
 }

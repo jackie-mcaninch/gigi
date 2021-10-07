@@ -6,19 +6,17 @@ file_name = "vault.bin"
 input = open(file_name, "rb")
 out = open("records.txt","w")
 file_size = os.stat(file_name).st_size
-num_records = (file_size)//32
-out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n")
+num_records = (file_size-1024)//32
+out.write(f"TOTAL RECORDS IN FILE: {str(num_records)}\n\n")
 
 #PRINT HEADER INFORMATION
-# wa = str(input.read(32).decode("utf8"))
-# ma = str(int.from_bytes(input.read(6), "big"))
-# pid = str(int.from_bytes(input.read(4), "big"))
-# vid = str(int.from_bytes(input.read(4), "big"))
-# out.write(f"wallet address is: {wa}\n")
-# out.write(f"mac address is: {ma}\n")
-# out.write(f"process id is: {pid}\n")
-# out.write(f"vault id is: {vid}\n")
-# out.write("\n")
+wa = str(input.read(32).decode("utf8"))
+ma = str(input.read(12).decode("utf8"))
+ma = "-".join(ma[x:x+2] for x in range(0,len(ma),2))
+out.write(f"wallet address is: {wa}\n")
+out.write(f"mac address is: {ma}\n")
+out.write("\n")
+input.seek(1024, 0)
 
 #PRINT INDIVIDUAL RECORDS
 if len(sys.argv) > 1:
@@ -42,7 +40,7 @@ for i in range(num_print):
     ts = int.from_bytes(input.read(4), "little")
     #out.write(f"{hex_hash:70s}\n")
     #out.write(f"{n:10d}  {ts:10d}  {bitstring:35s} {hex_hash:70s}\n")
-    out.write(f"{n:10d}  {ts:10d} {hex_hash:70s}\n")
+    out.write(f"{n:10d}  {ts:10d}  {hex_hash:70s}\n")
     bits.clear()
     
 input.close()
