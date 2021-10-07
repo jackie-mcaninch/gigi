@@ -26,7 +26,11 @@ void hex_to_bytes(const char* hex_string, char* out_byte_string, const char* hex
 int main(int argc, char *argv[]) {
     // OPEN FILE FOR WRITING
     ofstream file1;
-    file1.open("vault.bin", ios::out | ios::binary | ios::trunc);// | ios::app);
+    std::string file_name = "vault.bin";
+    if (argc > 1) {
+	file_name = argv[2];
+    }
+    file1.open(file_name, ios::out | ios::binary | ios::trunc);// | ios::app);
 
     if (!file1) {
         cout << "Error opening file.\n";
