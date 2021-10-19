@@ -1,5 +1,5 @@
 *.txt
-*.sh
+#*.sh
 *.bin
 *.pyc
 *.code-workspace
